@@ -8,6 +8,10 @@ If access to the site is limited (because the bot is working) we try to find a F
 
 Also in case of unexpected errors log.txt is created where they are recorded.
 
+## Add Excel file
+
+replace it in the root folder and add the name of the file in the main.py
+
 ## Installation
 
 Instructions on how to install and setup your project.

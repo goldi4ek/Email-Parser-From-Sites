@@ -183,37 +183,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-""" def main():
-    scraper = Scraper()
-    pages = [
-        "milleniachiropracticorlando.com",
-        "milleniachiropracticorlando.com",
-        "orlandochiropractic.com",
-        "chiropracticspineinjury.com",
-        "reid-chiro.com",
-        "chiropractorwellington.com",
-        "chiropractorwellington.com",
-        "omgchiro.com",
-        "tampacentralchiropractic.com",
-        "southorlandochiro.com",
-        "encompasschiropractic.com",
-        "online-chat.io",
-        "spineandjointofswfl.com",
-    ]
-
-    excel_processor = ExcelProcessor("links.xlsx", scraper)
-
-    pages_and_emails = {}
-
-    i = 0
-    for page in pages:
-        if page not in pages_and_emails:
-            print(i, " ", page)
-            pages_and_emails[page] = scraper.check_page(page)
-        i += 1
-
-    print(pages_and_emails)
-
-    scraper.close()
- """
