@@ -1,3 +1,4 @@
+from logging import log
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -7,6 +8,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import requests
 import re
+import os
+from dotenv import load_dotenv
+import time
 
 
 class Scraper:
@@ -29,11 +33,37 @@ class Scraper:
     """
 
     def __init__(self):
+        load_dotenv()
+
         options = Options()
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
         options.add_argument("--headless")
         service = Service("chromedriver.exe")
         self.driver = Chrome(service=service, options=options)
+
+        self.login_to_facebook()
+
+    def login_to_facebook(self):
+        """
+        Logs in to Facebook using the provided credentials.
+
+        Returns:
+            None
+        """
+
+        password = os.getenv("PASSWORD")
+        phone_number = os.getenv("PHONE_NUMBER")
+
+        self.driver.get("https://www.facebook.com/")
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "email"))
+        )
+        email_input = self.driver.find_element(By.ID, "email")
+        email_input.send_keys(phone_number)
+        password_input = self.driver.find_element(By.ID, "pass")
+        password_input.send_keys(password)
+        login_button = self.driver.find_element(By.NAME, "login")
+        login_button.click()
 
     def check_page(self, url):
         """
@@ -49,36 +79,26 @@ class Scraper:
         try:
             response = requests.get(f"https://{url}", timeout=5)
 
-            if response.status_code == 200:
-                page = BeautifulSoup(response.content, "html.parser")
-                email = self.find_email(page)
+            if not response.status_code == 200:
+                return self.create_and_check_fb_link(url)
 
-                if email:
-                    print(email)
-                    return email
-                else:
-                    facebook_link = self.find_facebook_link(page)
+            page = BeautifulSoup(response.content, "html.parser")
+            email = self.find_email(page)
 
-                    if facebook_link:
-                        if self.check_facebook_link(facebook_link):
-                            return self.process_facebook_page(facebook_link)
-                        else:
-                            try:
-                                self.create_and_check_fb_link(url)
-                            except:
-                                print("Wrong facebook link format")
-                                return None
-                    else:
-                        print("No email and facebook found")
-                        return None
-            else:
-                self.create_and_check_fb_link(url)
-                print(
-                    f"Failed to load page: {url} with status code {response.status_code}"
-                )
+            if email:
+                print(email)
+                return email
+
+            facebook_link = self.find_facebook_link(page)
+
+            if facebook_link:
+                return self.process_facebook_page(facebook_link)
+
+            return self.create_and_check_fb_link(url)
+
         except:
             try:
-                self.create_and_check_fb_link(url)
+                return self.create_and_check_fb_link(url)
 
             except requests.exceptions.Timeout:
                 print(f"Connection timed out for page: {url}")
@@ -103,7 +123,7 @@ class Scraper:
             bool: True if the URL is a valid Facebook link, False otherwise.
         """
         facebook_link = url.split("/")
-        return len(facebook_link) == 4
+        return facebook_link[3] != "sharer" and facebook_link[3] != "dialog"
 
     def create_and_check_fb_link(self, url):
         """
@@ -113,10 +133,10 @@ class Scraper:
             url (str): The URL to create the Facebook link from.
 
         Returns:
-            None
+            str: Email address found on the Facebook page, or None if no email is found.
         """
         fb_link = self.create_fb_link(url)
-        self.process_facebook_page(fb_link)
+        return self.process_facebook_page(fb_link)
 
     def create_fb_link(self, url):
         """
@@ -142,7 +162,9 @@ class Scraper:
         Returns:
             str or None: The email address found in the page, or None if no email address is found.
         """
-        email = page.find("a", href=re.compile(r"mailto:"))
+        email = page.find(
+            "a", href=re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
+        )
 
         if email:
             return email["href"].split(":")[1]
@@ -158,13 +180,16 @@ class Scraper:
         Returns:
             str or None: The Facebook link if found, None otherwise.
         """
-        facebook_link = page.find("a", href=re.compile(r"facebook\.com"))
+        facebook_pages = page.find_all("a", href=re.compile(r"facebook\.com"))
 
-        if facebook_link:
-            return facebook_link["href"]
+        for facebook_page in facebook_pages:
+            if self.check_facebook_link(facebook_page["href"]):
+                return facebook_page["href"]
+
         return None
 
     def process_facebook_page(self, facebook_link):
+        print(facebook_link)
         """
         Process the Facebook page and extract the email address from the contact information.
 
@@ -192,19 +217,21 @@ class Scraper:
         soup = BeautifulSoup(page_source, "html.parser")
         info_block = soup.find(class_="x78zum5 x1n2onr6 xh8yej3")
 
-        if info_block:
-            for div in info_block.find_all("div"):
-                if re.match(
-                    r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
-                    div.text,
-                ):
-                    print(div.text)
-                    return div.text
-            print("No email found on Facebook page")
+        if not info_block:
+            print(
+                "No contact information found on Facebook page or page is not accessible"
+            )
             return None
-        else:
-            print("No contact information found on Facebook page")
-            return None
+
+        for div in info_block.find_all("div"):
+            if re.match(
+                r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+                div.text,
+            ):
+                print(div.text)
+                return div.text
+        print("No email found on Facebook page")
+        return None
 
     def close(self):
         """

@@ -54,6 +54,6 @@ class ExcelProcessor:
                                 emails = ", ".join(emails)
                             else:
                                 emails = emails[0]
-
                             sheet.cell(row=cell.row, column=5).value = emails
                             self.wb.save(self.filename)
+            print(f"\n{'-'*50}\nSheet {sheet.title} processed.\n{'-'*50}\n")
