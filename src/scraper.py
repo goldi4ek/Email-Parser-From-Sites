@@ -10,6 +10,24 @@ import re
 
 
 class Scraper:
+    """
+    A class for scraping web pages and extracting email addresses and Facebook links.
+
+    Attributes:
+        driver (WebDriver): The Selenium WebDriver used for interacting with the web pages.
+
+    Methods:
+        __init__(self): Initializes the Scraper object and sets up the WebDriver.
+        check_page(self, url): Checks the given page for email addresses and Facebook links.
+        check_facebook_link(self, url): Checks if the given URL is a valid Facebook link.
+        create_and_check_fb_link(self, url): Creates a Facebook link based on the given URL and processes the Facebook page.
+        create_fb_link(self, url): Creates a Facebook link based on the given URL.
+        find_email(self, page): Finds and returns the email address from the given page.
+        find_facebook_link(self, page): Finds the Facebook link on a given page.
+        process_facebook_page(self, facebook_link): Processes the Facebook page and extracts the email address from the contact information.
+        close(self): Closes the web driver and releases any associated resources.
+    """
+
     def __init__(self):
         options = Options()
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
@@ -18,6 +36,15 @@ class Scraper:
         self.driver = Chrome(service=service, options=options)
 
     def check_page(self, url):
+        """
+        Check the given page for email and Facebook link.
+
+        Args:
+            url (str): The URL of the page to check.
+
+        Returns:
+            str or None: The email found on the page, or None if no email or Facebook link is found.
+        """
         print(f"\nChecking page: {url}:")
         try:
             response = requests.get(f"https://{url}", timeout=5)
@@ -66,18 +93,55 @@ class Scraper:
                 return None
 
     def check_facebook_link(self, url):
+        """
+        Checks if the given URL is a valid Facebook link.
+
+        Args:
+            url (str): The URL to be checked.
+
+        Returns:
+            bool: True if the URL is a valid Facebook link, False otherwise.
+        """
         facebook_link = url.split("/")
         return len(facebook_link) == 4
 
     def create_and_check_fb_link(self, url):
+        """
+        Creates a Facebook link based on the given URL and processes the Facebook page.
+
+        Args:
+            url (str): The URL to create the Facebook link from.
+
+        Returns:
+            None
+        """
         fb_link = self.create_fb_link(url)
         self.process_facebook_page(fb_link)
 
     def create_fb_link(self, url):
+        """
+        Creates a Facebook link based on the given URL.
+
+        Args:
+            url (str): The URL of the website.
+
+        Returns:
+            str: The Facebook link.
+
+        """
         name_of_fb_page = url.split(".")[0]
         return f"https://www.facebook.com/{name_of_fb_page}"
 
     def find_email(self, page):
+        """
+        Finds and returns the email address from the given page.
+
+        Args:
+            page (BeautifulSoup): The BeautifulSoup object representing the page.
+
+        Returns:
+            str or None: The email address found in the page, or None if no email address is found.
+        """
         email = page.find("a", href=re.compile(r"mailto:"))
 
         if email:
@@ -85,6 +149,15 @@ class Scraper:
         return None
 
     def find_facebook_link(self, page):
+        """
+        Finds the Facebook link on a given page.
+
+        Args:
+            page (BeautifulSoup): The BeautifulSoup object representing the page.
+
+        Returns:
+            str or None: The Facebook link if found, None otherwise.
+        """
         facebook_link = page.find("a", href=re.compile(r"facebook\.com"))
 
         if facebook_link:
@@ -92,6 +165,15 @@ class Scraper:
         return None
 
     def process_facebook_page(self, facebook_link):
+        """
+        Process the Facebook page and extract the email address from the contact information.
+
+        Args:
+            facebook_link (str): The link to the Facebook page.
+
+        Returns:
+            str or None: The extracted email address if found, None otherwise.
+        """
         self.driver.get(facebook_link)
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
@@ -125,4 +207,7 @@ class Scraper:
             return None
 
     def close(self):
+        """
+        Closes the web driver and releases any associated resources.
+        """
         self.driver.quit()
