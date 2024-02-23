@@ -30,24 +30,29 @@ class Scraper:
                 email = self.find_email(page)
                 if email:
                     print(email)
+                    return email
                 else:
                     facebook_link = self.find_facebook_link(page)
                     if facebook_link:
                         self.process_facebook_page(facebook_link)
                     else:
                         print("No email and facebook found")
+                        return None
             else:
                 print(
                     f"Failed to load page: {url} with status code {response.status_code}"
                 )
         except requests.exceptions.Timeout:
             print(f"Connection timed out for page: {url}")
+            return None
         except requests.exceptions.SSLError:
             print(f"SSL error for page: {url}")
+            return None
         except Exception as e:
             with open("log.txt", "a") as f:
                 f.write(f"Could not connect to {url}: {e}\n")
             print(f"Some error on page: {url}")
+            return None
 
     # Find the email address on the page
     def find_email(self, page):
@@ -97,7 +102,9 @@ class Scraper:
                     div.text,
                 ):
                     print(div.text)
-                    break
+                    return div.text
+            print("No email found on Facebook page")
+            return None
 
     def close(self):
         self.driver.quit()
@@ -106,6 +113,129 @@ class Scraper:
 def main():
     scraper = Scraper()
     pages = [
+        "milleniachiropracticorlando.com",
+        "milleniachiropracticorlando.com",
+        "orlandochiropractic.com",
+        "chiropracticspineinjury.com",
+        "reid-chiro.com",
+        "chiropractorwellington.com",
+        "chiropractorwellington.com",
+        "omgchiro.com",
+        "tampacentralchiropractic.com",
+        "southorlandochiro.com",
+        "encompasschiropractic.com",
+        "online-chat.io",
+        "spineandjointofswfl.com",
+    ]
+
+    pages_and_emails = {}
+
+    i = 0
+    for page in pages:
+        if page not in pages_and_emails:
+            print(i, " ", page)
+            pages_and_emails[page] = scraper.check_page(page)
+            i += 1
+
+    print(pages_and_emails)
+    # Use scraper to check pages
+    scraper.close()
+
+
+if __name__ == "__main__":
+    main()
+
+""" 
+        "calendly.com",
+        "thejoint.com",
+        "bocachiropracticsw.com",
+        "lakenonachiropractic.com",
+        "calendly.com",
+        "thejoint.com",
+        "bocachiropracticsw.com",
+        "bocachiropracticsw.com",
+        "lakenonachiropractic.com",
+        "orangewellness.com",
+        "orangewellness.com",
+        "chiropractorpalmcoast.com",
+        "chiropractorpalmcoast.com",
+        "riverviewchiropracticcenter.com",
+        "advancedspinetherapy.com",
+        "drrickbruns.com",
+        "ormondfamilychiro.com",
+        "ormondfamilychiro.com",
+        "nightlightchiropractic.com",
+        "nightlightchiropractic.com",
+        "acomhealth.com",
+        "wesleychapelchiropractor.com",
+        "orlandocityhealth.com",
+        "totalhealthnaples.com",
+        "orangewellness.com",
+        "orangewellness.com",
+        "hochmanchiro.com",
+        "yocale.com",
+        "chiropractorsinkendall.com",
+        "lbvchiro.com",
+        "lbvchiro.com",
+        "zocdoc.com",
+        "winterparkchiropractor.com",
+        "patienthealthcenters.org",
+        "procarefl.com",
+        "vivahealthcenters.com",
+        "vivahealthcenters.com",
+        "getchiro.net",
+        "drneilspanier.com",
+        "miramarchirorehab.com",
+        "miramarchirorehab.com",
+        "reesechiro.com",
+        "nuspine.com",
+        "thejoint.com",
+        "miamichiropracticwellness.com",
+        "stgermainchiropractic.com",
+        "downtownmiamichiropractor.com",
+        "simplybook.me",
+        "integratedchiropracticofboca.com",
+        "janeapp.com",
+        "foundationflorida.com",
+        "cobbrehabwellness.com",
+        "zocdoc.com",
+        "carewellness.org",
+        "harboursidechiropractic.com",
+        "nordikchiropractic.com",
+        "nordikchiropractic.com",
+        "drzevtv.com",
+        "fortlauderdalewhiplash.com",
+        "fortlauderdalewhiplash.com",
+        "lakelandsfamilychiropractic.com",
+        "stephensclinic.com",
+        "stephensclinic.com",
+        "schedulista.com",
+        "jaxbax.com",
+        "themiamichiropractor.com",
+        "floridachiropractor.com",
+        "mychirotouch.com",
+        "chiropractorinmiami.com",
+        "praglechiropractictallahassee.com",
+        "pinnaclebradenton.com",
+        "calendly.com",
+        "ptcmiami.com",
+        "sports-spine.com",
+        "flspineandinjury.com",
+        "melbournechiropractic.net",
+        "flspineandinjury.com",
+        "flspineandinjury.com",
+        "ocalainjurycenter.com",
+        "chiro.city",
+        "drleighsierra.com",
+        "drmichaelnewman.com",
+        "drmichaelnewman.com",
+        "marshallwebsterchiropractor.com",
+        "verobeachchiropractic.com",
+        "murdockwellness.com",
+        "chiropractorjupiterfl.com",
+        "chiropractorjupiterfl.com",
+        "michaelsavignanochiropractor.com",
+        "drericnye.com", 
         "drbochiro.com",
         "jacklynady.com",
         "zocdoc.com",
@@ -367,123 +497,4 @@ def main():
         "flspinedisc.com",
         "flpwellness.com",
         "flpwellness.com",
-        "milleniachiropracticorlando.com",
-        "milleniachiropracticorlando.com",
-        "orlandochiropractic.com",
-        "chiropracticspineinjury.com",
-        "reid-chiro.com",
-        "chiropractorwellington.com",
-        "chiropractorwellington.com",
-        "omgchiro.com",
-        "tampacentralchiropractic.com",
-        "southorlandochiro.com",
-        "encompasschiropractic.com",
-        "online-chat.io",
-        "spineandjointofswfl.com",
-    ]
-
-    i = 0
-    for page in pages:
-        print(i, " ", page)
-        scraper.check_page(page)
-        i += 1
-    total = len(pages) - i
-    print(total)
-    # Use scraper to check pages
-    scraper.close()
-
-
-if __name__ == "__main__":
-    main()
-
-""" 
-"calendly.com",
-        "thejoint.com",
-        "bocachiropracticsw.com",
-        "lakenonachiropractic.com",
-        "calendly.com",
-        "thejoint.com",
-        "bocachiropracticsw.com",
-        "bocachiropracticsw.com",
-        "lakenonachiropractic.com",
-        "orangewellness.com",
-        "orangewellness.com",
-        "chiropractorpalmcoast.com",
-        "chiropractorpalmcoast.com",
-        "riverviewchiropracticcenter.com",
-        "advancedspinetherapy.com",
-        "drrickbruns.com",
-        "ormondfamilychiro.com",
-        "ormondfamilychiro.com",
-        "nightlightchiropractic.com",
-        "nightlightchiropractic.com",
-        "acomhealth.com",
-        "wesleychapelchiropractor.com",
-        "orlandocityhealth.com",
-        "totalhealthnaples.com",
-        "orangewellness.com",
-        "orangewellness.com",
-        "hochmanchiro.com",
-        "yocale.com",
-        "chiropractorsinkendall.com",
-        "lbvchiro.com",
-        "lbvchiro.com",
-        "zocdoc.com",
-        "winterparkchiropractor.com",
-        "patienthealthcenters.org",
-        "procarefl.com",
-        "vivahealthcenters.com",
-        "vivahealthcenters.com",
-        "getchiro.net",
-        "drneilspanier.com",
-        "miramarchirorehab.com",
-        "miramarchirorehab.com",
-        "reesechiro.com",
-        "nuspine.com",
-        "thejoint.com",
-        "miamichiropracticwellness.com",
-        "stgermainchiropractic.com",
-        "downtownmiamichiropractor.com",
-        "simplybook.me",
-        "integratedchiropracticofboca.com",
-        "janeapp.com",
-        "foundationflorida.com",
-        "cobbrehabwellness.com",
-        "zocdoc.com",
-        "carewellness.org",
-        "harboursidechiropractic.com",
-        "nordikchiropractic.com",
-        "nordikchiropractic.com",
-        "drzevtv.com",
-        "fortlauderdalewhiplash.com",
-        "fortlauderdalewhiplash.com",
-        "lakelandsfamilychiropractic.com",
-        "stephensclinic.com",
-        "stephensclinic.com",
-        "schedulista.com",
-        "jaxbax.com",
-        "themiamichiropractor.com",
-        "floridachiropractor.com",
-        "mychirotouch.com",
-        "chiropractorinmiami.com",
-        "praglechiropractictallahassee.com",
-        "pinnaclebradenton.com",
-        "calendly.com",
-        "ptcmiami.com",
-        "sports-spine.com",
-        "flspineandinjury.com",
-        "melbournechiropractic.net",
-        "flspineandinjury.com",
-        "flspineandinjury.com",
-        "ocalainjurycenter.com",
-        "chiro.city",
-        "drleighsierra.com",
-        "drmichaelnewman.com",
-        "drmichaelnewman.com",
-        "marshallwebsterchiropractor.com",
-        "verobeachchiropractic.com",
-        "murdockwellness.com",
-        "chiropractorjupiterfl.com",
-        "chiropractorjupiterfl.com",
-        "michaelsavignanochiropractor.com",
-        "drericnye.com", """
+        """
