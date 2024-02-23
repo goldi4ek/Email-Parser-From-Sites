@@ -34,25 +34,50 @@ class Scraper:
                 else:
                     facebook_link = self.find_facebook_link(page)
                     if facebook_link:
-                        self.process_facebook_page(facebook_link)
+                        if self.check_facebook_link(facebook_link):
+                            self.process_facebook_page(facebook_link)
+                        else:
+                            try:
+                                self.create_and_check_fb_link(url)
+                            except:
+                                print("Wrong facebook link format")
+                                return None
                     else:
                         print("No email and facebook found")
                         return None
             else:
+                self.create_and_check_fb_link(url)
                 print(
                     f"Failed to load page: {url} with status code {response.status_code}"
                 )
-        except requests.exceptions.Timeout:
-            print(f"Connection timed out for page: {url}")
-            return None
-        except requests.exceptions.SSLError:
-            print(f"SSL error for page: {url}")
-            return None
-        except Exception as e:
-            with open("log.txt", "a") as f:
-                f.write(f"Could not connect to {url}: {e}\n")
-            print(f"Some error on page: {url}")
-            return None
+        except:
+            try:
+                self.create_and_check_fb_link(url)
+
+            except requests.exceptions.Timeout:
+                print(f"Connection timed out for page: {url}")
+                return None
+            except requests.exceptions.SSLError:
+                print(f"SSL error for page: {url}")
+                return None
+            except Exception as e:
+                with open("log.txt", "a") as f:
+                    f.write(f"Could not connect to {url}: {e}\n")
+                print(f"Some error on page: {url}")
+                return None
+
+    def check_facebook_link(self, url):
+        facebook_link = url.split("/")
+        return len(facebook_link) == 4
+
+    def create_and_check_fb_link(self, url):
+        fb_link = self.create_fb_link(url)
+        print(fb_link)
+        self.process_facebook_page(fb_link)
+
+    def create_fb_link(self, url):
+        name_of_fb_page = url.split(".")[0]
+        return f"https://www.facebook.com/{name_of_fb_page}"
 
     # Find the email address on the page
     def find_email(self, page):
@@ -105,6 +130,9 @@ class Scraper:
                     return div.text
             print("No email found on Facebook page")
             return None
+        else:
+            print("No contact information found on Facebook page")
+            return None
 
     def close(self):
         self.driver.quit()
@@ -135,10 +163,10 @@ def main():
         if page not in pages_and_emails:
             print(i, " ", page)
             pages_and_emails[page] = scraper.check_page(page)
-            i += 1
+        i += 1
 
     print(pages_and_emails)
-    # Use scraper to check pages
+
     scraper.close()
 
 
