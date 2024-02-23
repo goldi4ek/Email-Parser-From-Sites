@@ -10,11 +10,15 @@ Also in case of unexpected errors log.txt is created where they are recorded.
 
 ## Add Excel file
 
-replace it in the root folder and add the name of the file in the main.py
+Replace it in the root folder and add the name of the file in the main.py
+
+## Add ChromeWebDriver
+
+Replace it in the root folder and dowbload google chrome version 114
 
 ## Installation
 
-Instructions on how to install and setup your project.
+Instructions on how to install and setup project.
 
 ```bash
 git clone https://github.com/goldi4ek/Email-Parser-From-Sites.git
