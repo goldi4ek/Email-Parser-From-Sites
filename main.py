@@ -1,3 +1,4 @@
+from openpyxl.reader import excel
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -6,10 +7,10 @@ from selenium.webdriver.common.proxy import ProxyType
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
-import requests
 from bs4 import BeautifulSoup
+import requests
+import openpyxl
 import re
-import time
 
 
 class Scraper:
@@ -23,6 +24,7 @@ class Scraper:
 
     # Check the page for an email address
     def check_page(self, url):
+        print(f"\nChecking page: {url}:")
         try:
             response = requests.get(f"https://{url}", timeout=5)
             if response.status_code == 200:
@@ -35,7 +37,7 @@ class Scraper:
                     facebook_link = self.find_facebook_link(page)
                     if facebook_link:
                         if self.check_facebook_link(facebook_link):
-                            self.process_facebook_page(facebook_link)
+                            return self.process_facebook_page(facebook_link)
                         else:
                             try:
                                 self.create_and_check_fb_link(url)
@@ -72,7 +74,6 @@ class Scraper:
 
     def create_and_check_fb_link(self, url):
         fb_link = self.create_fb_link(url)
-        print(fb_link)
         self.process_facebook_page(fb_link)
 
     def create_fb_link(self, url):
@@ -138,7 +139,53 @@ class Scraper:
         self.driver.quit()
 
 
+class ExcelProcessor:
+    def __init__(self, filename, scraper):
+        self.wb = openpyxl.load_workbook(filename)
+        self.scraper = scraper
+        self.filename = filename
+
+    def process_links_and_get_emails(self):
+        for sheet in self.wb.worksheets:
+            if sheet.cell(row=1, column=5).value == "phone":
+                sheet.insert_cols(idx=5)
+                sheet.cell(row=1, column=5).value = "email"
+            for row in sheet.iter_rows():
+                cell = row[3]
+                if cell.value is not None and cell.row != 1 and row[4].value is None:
+                    websites_to_check = []
+                    websites_in_cell = str(cell.value)
+                    websites_in_cell = websites_in_cell.split(",")
+                    for website_in_cell in websites_in_cell:
+                        websites_to_check.append(website_in_cell.strip())
+                    for website_to_check in websites_to_check:
+                        emails = []
+                        email = self.scraper.check_page(website_to_check.strip())
+                        if email is not None:
+                            emails.append(email)
+                            if len(emails) > 1:
+                                emails = ", ".join(emails)
+                            else:
+                                emails = emails[0]
+
+                            sheet.cell(row=cell.row, column=5).value = emails
+                            self.wb.save(self.filename)
+
+
 def main():
+    scraper = Scraper()
+
+    excel_processor = ExcelProcessor("USA Services.xlsx", scraper)
+
+    excel_processor.process_links_and_get_emails()
+
+    scraper.close()
+
+
+if __name__ == "__main__":
+    main()
+
+""" def main():
     scraper = Scraper()
     pages = [
         "milleniachiropracticorlando.com",
@@ -156,6 +203,8 @@ def main():
         "spineandjointofswfl.com",
     ]
 
+    excel_processor = ExcelProcessor("links.xlsx", scraper)
+
     pages_and_emails = {}
 
     i = 0
@@ -168,7 +217,4 @@ def main():
     print(pages_and_emails)
 
     scraper.close()
-
-
-if __name__ == "__main__":
-    main()
+ """
